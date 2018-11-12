@@ -1,0 +1,6 @@
+[submodule "StateMachine"]
+	path = StateMachine
+	url = https://github.com/sendtogil/RxStateMachine
+[submodule "FadeManager"]
+	path = FadeManager
+	url = https://github.com/sendtogil/RxFadeManager
