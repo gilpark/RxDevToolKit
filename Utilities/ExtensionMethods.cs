@@ -1,19 +1,18 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
-namespace _Scripts.RxDevKit.Utilities
+namespace DevToolKit.Utilities
 {
     public static class ExtensionMethods
     {
         // float //
-        public static float FromTo(this float _f, float _fromMin, float _fromMax, float _toMin, float _toMax)
+        public static float MapValue(this float f, float fromMin, float fromMax, float toMin, float toMax)
         {
-            float returnFloat = (((_toMax - _toMin) * (_f - _fromMin)) / (_fromMax - _fromMin)) + _toMin;
-            return returnFloat;
+            return (toMax - toMin) * (f - fromMin) / (fromMax - fromMin) + toMin;
         }
 
         public static void Shuffle<T>(this List<T> list)
@@ -28,42 +27,47 @@ namespace _Scripts.RxDevKit.Utilities
                 list[n] = value;
             }
         }
-
-        public static IEnumerator AlphaFromTo(this RawImage _image, float _from, float _to, float _time)
+        public static IEnumerator AlphaFromTo(this CanvasGroup canvas, float from, float to, float duration)
         {
             float time = 0;
-            Color startColor = _image.color;
-            _image.color = new Color(startColor.r, startColor.g, startColor.b, Mathf.Lerp(_from, _to, 0));
-            while (time < 1)
+            canvas.alpha = from;
+            while (time < duration)
             {
                 yield return null;
                 time += Time.deltaTime;
-                _image.color = new Color(startColor.r, startColor.g, startColor.b, Mathf.Lerp(_from, _to, time));
+                canvas.alpha = Mathf.Lerp(from, to, time);
             }
-            _image.color = new Color(startColor.r, startColor.g, startColor.b, Mathf.Lerp(_from, _to, 1));
+            canvas.alpha = to;
+        }
+        
+        public static IEnumerator AlphaFromTo(this RawImage image, float @from, float to, float duration)
+        {
+            float time = 0;
+            Color startColor = image.color;
+            image.color = new Color(startColor.r, startColor.g, startColor.b, Mathf.Lerp(@from, to, 0));
+            while (time < duration)
+            {
+                yield return null;
+                time += Time.deltaTime;
+                image.color = new Color(startColor.r, startColor.g, startColor.b, Mathf.Lerp(@from, to, time));
+            }
+            image.color = new Color(startColor.r, startColor.g, startColor.b, Mathf.Lerp(@from, to, 1));
         }
 
-        public static string GetCurrentDateTime(this string _s, bool _includeTime = true)
+        public static string GetCurrentDateTime(this string s, bool includeTime = true)
         {
-            return (_includeTime)
-                ? DateTime.Now.ToString("dd-MM-yy_HH-mm-ss")
-                : System.DateTime.Now.ToString("dd-MM-yy");
+            return includeTime ? DateTime.Now.ToString("dd-MM-yy_HH-mm-ss") : System.DateTime.Now.ToString("dd-MM-yy");
         }
 
         public static int Parse(this string s)
         {
             int num = 0;
-
-            if (int.TryParse(s, out num))
-            {
-                //Was assigned
-            }
+            if (int.TryParse(s, out num)){}
             else
             {
                 Debug.LogError("Inputted string - [ " + s + " ] - not a number, TryParse() failed... Assigning -1");
                 num = -1;
             }
-
             return num;
         }
 
