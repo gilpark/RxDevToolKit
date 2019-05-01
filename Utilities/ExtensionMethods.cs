@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using UniRx;
@@ -19,6 +20,7 @@ namespace DevToolKit.Utilities
             return returnFloat;
         }
 
+        
         public static void Shuffle<T>(this List<T> list)
         {
             int n = list.Count;
@@ -157,6 +159,57 @@ namespace DevToolKit.Utilities
             }
 
             return result;
+        }
+        public static IObservable<string> SaveToFile(this IObservable<MemoryStream>src, string filePath)
+        {
+            return src.SelectMany(ms =>
+                Using(() => new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None)
+                    , fs =>
+                    {
+                        try
+                        {
+                            byte[] bytes = new byte[ms.Length];
+                            ms.Read(bytes, 0, (int) ms.Length);
+                            fs.Write(bytes, 0, bytes.Length);
+                            ms.Close();
+                            ms.Dispose();
+                        }
+                        catch (Exception e)
+                        {
+                            Observable.Throw<Exception>(e);
+                            throw;
+                        }
+
+                        return Observable.Return(filePath);
+                    }));
+        }
+
+        public static IObservable<TSource> Using<TSource, TResource>(
+            Func<TResource> resourceFactory,
+            Func<TResource, IObservable<TSource>> observableFactory)
+            where TResource : IDisposable
+        {
+            return Observable.Create<TSource>(observer =>
+            {
+                var source = default(IObservable<TSource>);
+                var disposable = Disposable.Empty;
+                try
+                {
+                    var resource = resourceFactory();
+                    if (resource != null)
+                    {
+                        disposable = resource;
+                    }
+
+                    source = observableFactory(resource);
+                }
+                catch (Exception exception)
+                {
+                    return new CompositeDisposable(Observable.Throw<TSource>(exception).Subscribe(observer), disposable);
+                }
+
+                return new CompositeDisposable(source.Subscribe(observer), disposable);
+            });
         }
     }
 }
